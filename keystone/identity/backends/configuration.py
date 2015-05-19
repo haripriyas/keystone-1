@@ -11,7 +11,7 @@ confPath = "/root/keystone/etc/keystone.conf"
 twilio_from = "+18556224580"
 twilio_account_sid = "ACcd9edd751f592e08f091729fa5c00138"
 twilio_auth_token  = "0c09144d04ce2e94d4afcd5dd3966d2d"
-authTimeoutDuration = 3000
+authTimeoutDuration = 30 # in seconds
 
 class Config:
     """
