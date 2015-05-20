@@ -64,13 +64,27 @@ When user is trying to authenticate with wrong OTP 3 times , user will be blocke
 
 Also OTP will be valid only for 30 seconds, after 30 seconds OTP will be expired. This time limit can be changed in the configuration.
 
-#### Setup
+
+Setup:
+
 1. Setup Horizon and Keystone
 2. Run requirement.txt
 3. Set the keystone.conf path in keystone/identity/backends/configuration.py 
 4. Set the Twilio credentials in keystone/identity/backends/configuration.py 
 5. Also set the default OTP expiration settings in authTimeoutDuration.
-6. Restore the mysql dump to the keystone database using keystone_customtables.sql
+6. Change the conf settings as follows
+       
+        $ [identity]
+        $ driver = keystone.identity.backends.custom.Identity 
+        
+        and include the new otp method.
+        
+      
+        $ [auth]
+        $ methods = external,password,token,oauth1,otp
+        
+
+7. Restore the mysql dump to the keystone database using keystone_customtables.sql
 
 
 
