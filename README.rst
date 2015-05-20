@@ -64,8 +64,9 @@ When user is trying to authenticate with wrong OTP 3 times , user will be blocke
 
 Also OTP will be valid only for 30 seconds, after 30 seconds OTP will be expired. This time limit can be changed in the configuration.
 
-** Setup **
-
+======
+Setup
+======
 1. Setup Horizon and Keystone
 2. Run requirement.txt
 3. Set the keystone.conf path in keystone/identity/backends/configuration.py 
