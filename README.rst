@@ -73,13 +73,13 @@ Setup:
 4. Set the Twilio credentials in keystone/identity/backends/configuration.py 
 5. Also set the default OTP expiration settings in authTimeoutDuration.
 6. Change the conf settings as follows
-       * ::
+       
         $ [identity]
         $ driver = keystone.identity.backends.custom.Identity 
         
         and include the new otp method.
         
-        * ::
+      
         $ [auth]
         $ methods = external,password,token,oauth1,otp
         
