@@ -43,7 +43,10 @@ class OTP(auth.AuthMethodHandler):
         # for verifying the OTP
         if dbBackendObj.selectAndVerifyOtp(auth_payload['otp_value'],auth_context['user_id']) :
                 def_proj_id = dbBackendObj.get_def_proj_id(auth_context['user_id'])
-                auth_context['access_token_id'] = context['headers']['X-Auth-Token']
+                
+		if 'X-Auth-Token' in context['headers']:
+			auth_context['access_token_id'] = context['headers']['X-Auth-Token']
+
                 tokenObj = Token()
                 auth_context['project_id'] = def_proj_id
         else :
