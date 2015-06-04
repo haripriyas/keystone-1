@@ -43,30 +43,28 @@ class DbBackend:
         db = conf.getDBConnection()
 
         # selecting count of userid from table for inseting into table
-        otpInDbCount = "select count(userid) from otp where userid = '"+str(userid)+"'"
-        cursor = db.cursor()
-        cursor.execute(otpInDbCount)
-        res = cursor.fetchone()
-        total_row_otp = res[0]
+
+
+        Identity = sql.Identity(userid)
+
+        total_row_otp_result = Identity.otpCountQuery(userid)
+
+        total_row_otp = total_row_otp_result[0]
+
+	print total_row_otp
 
         # If OTP entry already exists update the field value
         if total_row_otp:
-                sqlupdatenew = "update otp set OTPvalue='"+str(otp)+"', time= '"+str(new_current)+"' where userid='"+str(userid)+"' "
-                try:
-                        cursor.execute(sqlupdatenew)
-                        db.commit()
-                except:
-                        db.rollback()
+		print "update section"
+                Identity = sql.Identity(userid)
+                updateOtp = Identity.updateOtpQuery(userid,otp)
 
         # if no OTP entry exists Insert new row in it
         else:
-                sqlinsertnew = "INSERT INTO otp(userid, otpvalue) VALUES ('"+str(userid)+"','"+str(otp)+"')"
-                try:
-                        cursor.execute(sqlinsertnew)
-                        db.commit()
-                except:
-                        db.rollback()
-        db.close()
+
+		print "insert section"
+		Identity = sql.Identity(userid)
+		inserOtp = Identity.insertOtpQuery(userid,otp)
         return True
 
 
@@ -84,12 +82,18 @@ class DbBackend:
 
         db = conf.getDBConnection()
 
-        # for fetching the entries of current user from table
-        userBlockExists = "select count(userid),time from failedusers where userid = '"+str(userid)+"'"
-        cursor = db.cursor()
-        cursor.execute(userBlockExists)
-        res = cursor.fetchone()
-        time_user_blocked = res[1]
+	time_user_blocked = None	
+        Identity = sql.Identity(userid)
+
+        time_user_blocked_result = Identity.blockUserLoginQuery(userid)
+
+        print time_user_blocked_result
+
+        if time_user_blocked_result:
+		time_user_blocked = time_user_blocked_result[0]
+
+       		print time_user_blocked	
+
 
         # when user blocked time exists
         if time_user_blocked:
@@ -138,14 +142,26 @@ class DbBackend:
         current = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         new_current = datetime.datetime.strptime(current, f)
 
-        # selecting corrrespondine OTP entries from DB
-        selectOtpSql = "SELECT OTPvalue, time FROM otp where userid = '"+str(userid)+"'"
-        cursor.execute(selectOtpSql)
-        result = cursor.fetchone()
-        savedOtp = result[0]
 
-        # Check if the OTP saved time and the current time is having a difference of more than authtimeout duration, if yes return as unauthorized.
-        savedTime = result[1]
+	print "newcurremt"
+
+	print new_current
+
+
+	print userid
+	Identity = sql.Identity(userid)
+
+	print Identity
+
+        savedOtpResult = Identity.selectOTP(userid)
+
+	if savedOtpResult:
+	
+		savedOtp = savedOtpResult[0]
+
+        	savedTime = savedOtpResult[1]
+
+
         diff = new_current - savedTime
         LOG.info( diff.total_seconds())
 
@@ -333,13 +349,11 @@ class DbBackend:
         """
         
         LOG.info("For getting default project ID")
-        
-        sql = "SELECT default_project_id FROM user WHERE id = '" + user_id + "'"
-        LOG.info(sql)
-        db = conf.getDBConnection() 
-        cursor = db.cursor()
-        cursor.execute(sql)
-        result = cursor.fetchone()
-        project_id = result[0]
-        db.close()
+       
+	Identity = sql.Identity(user_id)
+
+        project_id_result = Identity.get_def_proj_id_query(user_id)
+
+        if project_id_result:
+	        project_id = project_id_result[0] 
         return project_id

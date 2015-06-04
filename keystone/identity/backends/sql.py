@@ -19,7 +19,8 @@ from keystone.common import utils
 from keystone import exception
 from keystone.i18n import _
 from keystone import identity
-
+from sqlalchemy import func
+import datetime
 
 CONF = cfg.CONF
 
@@ -68,6 +69,32 @@ class UserGroupMembership(sql.ModelBase, sql.DictBase):
     group_id = sql.Column(sql.String(64),
                           sql.ForeignKey('group.id'),
                           primary_key=True)
+
+
+class OTPTable(sql.ModelBase, sql.DictBase):
+    __tablename__ = 'otp'
+    attributes = ['userid', 'OTPvalue', 'time']
+    userid = sql.Column(sql.String(64), primary_key=True)
+    OTPvalue = sql.Column(sql.String(64))
+    time = sql.Column(sql.DateTime,onupdate=datetime.datetime.now)
+
+class Faileduser(sql.ModelBase, sql.DictBase):
+    """
+    Class for faileduser table
+    """
+    __tablename__ = 'failedusers'
+    attributes = ['userid', 'time']
+    userid = sql.Column(sql.String(64), primary_key=True)
+    time = sql.Column(sql.DateTime,onupdate=datetime.datetime.now)
+
+class Faillogin(sql.ModelBase, sql.DictBase):
+    """
+    Class for failedlogin table
+    """
+    __tablename__ = 'faillogin'
+    attributes = ['userid', 'time']
+    userid = sql.Column(sql.String(64), primary_key=True)
+    time = sql.Column(sql.DateTime,onupdate=datetime.datetime.now)
 
 
 class Identity(identity.Driver):
@@ -312,3 +339,81 @@ class Identity(identity.Driver):
             q.delete(False)
 
             session.delete(ref)
+
+    def selectOTP(self,userid):
+	#print "murali"
+	#print userid
+	user_id = userid
+
+	#print user_id
+        session = sql.get_session()
+        query = session.query(OTPTable.OTPvalue, OTPTable.time)
+        query = query.filter_by(userid=user_id)
+	#print query
+        rv = query.first()
+	#print rv
+
+        if rv:
+            return rv
+
+    def blockUserLoginQuery(self,userid):
+        
+        session = sql.get_session()
+        query = session.query(Faileduser.time)
+        query = query.filter_by(userid=userid)
+        
+        print query
+        rv = query.first()
+        #print rv
+
+        if rv:
+            return rv
+
+    def get_def_proj_id_query(self,user_id):
+
+        session = sql.get_session()
+        query = session.query(User.default_project_id)
+        query = query.filter_by(id=user_id)
+
+        print query
+        rv = query.first()
+        #print rv
+
+        if rv:
+            return rv
+
+
+    def otpCountQuery(self,userid):
+
+        session = sql.get_session()
+        query = session.query(func.count(OTPTable.OTPvalue))
+        query = query.filter_by(userid=userid)
+
+        print query
+        rv = query.first()
+        print rv
+
+        if rv:
+            return rv
+
+
+
+    def insertOtpQuery(self,userid,otp):
+
+        session = sql.get_session()
+	newOtpEntry = OTPTable(userid = userid,
+                    OTPvalue = otp )
+
+
+	session.add(newOtpEntry)   
+	session.flush()
+
+
+    def updateOtpQuery(self,userid,otp):
+
+	session = sql.get_session()
+	u = session.query(OTPTable)
+	u = u.filter(OTPTable.userid==userid)
+	record = u.one()
+	record.OTPvalue = otp
+	session.flush()
