@@ -72,6 +72,9 @@ class UserGroupMembership(sql.ModelBase, sql.DictBase):
 
 
 class OTPTable(sql.ModelBase, sql.DictBase):
+    """
+    Class for OTP table
+    """
     __tablename__ = 'otp'
     attributes = ['userid', 'OTPvalue', 'time']
     userid = sql.Column(sql.String(64), primary_key=True)
@@ -341,79 +344,127 @@ class Identity(identity.Driver):
             session.delete(ref)
 
     def selectOTP(self,userid):
-	#print "murali"
-	#print userid
-	user_id = userid
-
-	#print user_id
+	"""
+	selecting OTP from table
+	"""
+        user_id = userid
         session = sql.get_session()
         query = session.query(OTPTable.OTPvalue, OTPTable.time)
         query = query.filter_by(userid=user_id)
-	#print query
         rv = query.first()
-	#print rv
 
         if rv:
             return rv
 
-    def blockUserLoginQuery(self,userid):
-        
+    def userFailedTimeQuery(self,userid):
+      	"""
+	selecting user failed time 
+	""" 
         session = sql.get_session()
         query = session.query(Faileduser.time)
         query = query.filter_by(userid=userid)
-        
-        print query
         rv = query.first()
-        #print rv
 
         if rv:
             return rv
 
     def get_def_proj_id_query(self,user_id):
-
+	"""
+	Getting project ID
+	"""
         session = sql.get_session()
         query = session.query(User.default_project_id)
         query = query.filter_by(id=user_id)
-
-        print query
         rv = query.first()
-        #print rv
 
         if rv:
             return rv
 
-
     def otpCountQuery(self,userid):
-
+	"""
+	selecting OTP count
+	"""
         session = sql.get_session()
         query = session.query(func.count(OTPTable.OTPvalue))
         query = query.filter_by(userid=userid)
-
-        print query
         rv = query.first()
-        print rv
 
         if rv:
             return rv
 
-
-
     def insertOtpQuery(self,userid,otp):
-
+	"""
+	Inserting OTP entry
+	"""
         session = sql.get_session()
-	newOtpEntry = OTPTable(userid = userid,
+        newOtpEntry = OTPTable(userid = userid,
                     OTPvalue = otp )
-
-
-	session.add(newOtpEntry)   
-	session.flush()
-
+        session.add(newOtpEntry)   
+        session.flush()
 
     def updateOtpQuery(self,userid,otp):
+	"""
+	updating OTP entry
+	"""
+        session = sql.get_session()
+        u = session.query(OTPTable)
+        u = u.filter(OTPTable.userid==userid)
+        record = u.one()
+        record.OTPvalue = otp
+        session.flush()
 
-	session = sql.get_session()
-	u = session.query(OTPTable)
-	u = u.filter(OTPTable.userid==userid)
-	record = u.one()
-	record.OTPvalue = otp
-	session.flush()
+    def failLoginCountQuery(self,userid):
+	"""
+	Fetching fail login count
+	"""
+        session = sql.get_session()
+        query = session.query(func.count(Faillogin.userid))
+        query = query.filter_by(userid=userid)
+        rv = query.first()
+
+        if rv:
+            return rv
+
+    def insertFailLoginQuery(self,userid):
+	"""
+	Insertion to faillogin table
+	"""
+        session = sql.get_session()
+        newFailLoginEntry = Faillogin(userid = userid)
+        session.add(newFailLoginEntry)
+        session.flush()
+
+    def insertFailUserQuery(self,userid):
+	"""
+	Insetion to failedusers table
+	"""
+        session = sql.get_session()
+        newFailLoginEntry = Faileduser(userid = userid)
+        session.add(newFailLoginEntry)
+        session.flush()
+
+    def failedUsersCountQuery(self,userid):
+	"""
+	Fetching failed users count 
+	"""
+        session = sql.get_session()
+        query = session.query(func.count(Faileduser.userid))
+        query = query.filter_by(userid=userid)
+        rv = query.first()
+        
+        if rv:
+            return rv
+
+    def deleteFailLogins(self,userid):
+	"""
+	deleting fail login details
+	"""
+        session = sql.get_session()
+        session.query(Faillogin).filter_by(userid=userid).delete()
+
+    def deleteFailUsers(self,userid):
+	"""
+	deleting failedusers details
+	"""
+        session = sql.get_session()
+        session.query(Faileduser).filter_by(userid=userid).delete()
